@@ -10,18 +10,30 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@expo/vector-icons": "^10.0.6",
+    "expo-asset": "^8.0.0",
+    "expo-constants": "^8.0.0",
+    "expo-file-system": "^8.0.0",
+    "expo-font": "^8.0.0",
+    "native-base": "^2.13.8",
     "react": "16.9.0",
     "react-native": "0.61.5",
     "react-native-elements": "^1.2.7",
     "react-native-gesture-handler": "^1.5.3",
     "react-native-menu": "^0.23.0",
+    "react-native-modules": "^2.0.0",
+    "react-native-nav": "^2.0.2",
     "react-native-navbar": "^2.1.0",
     "react-native-obd2": "0.0.2",
-    "react-native-reanimated": "^1.5.0",
+    "react-native-popup-menu": "^0.15.6",
+    "react-native-reanimated": "^1.7.0",
     "react-native-router": "^0.2.1",
     "react-native-router-flux": "^4.2.0",
+    "react-native-screens": "^2.0.0-alpha.32",
     "react-native-shared-preferences": "^1.0.1",
-    "react-native-sp": "0.0.8"
+    "react-native-vector-icons": "^6.6.0",
+    "react-navigation": "^4.1.0",
+    "react-navigation-drawer": "^2.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
