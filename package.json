@@ -18,6 +18,8 @@
     "native-base": "^2.13.8",
     "react": "16.9.0",
     "react-native": "0.61.5",
+    "react-native-canvas": "^0.1.37",
+    "react-native-easy-grid": "^0.2.2",
     "react-native-elements": "^1.2.7",
     "react-native-gesture-handler": "^1.5.3",
     "react-native-menu": "^0.23.0",
@@ -31,7 +33,9 @@
     "react-native-router-flux": "^4.2.0",
     "react-native-screens": "^2.0.0-alpha.32",
     "react-native-shared-preferences": "^1.0.1",
+    "react-native-speedometer": "^1.0.3",
     "react-native-vector-icons": "^6.6.0",
+    "react-native-webview": "^8.1.2",
     "react-navigation": "^4.1.0",
     "react-navigation-drawer": "^2.3.3"
   },
