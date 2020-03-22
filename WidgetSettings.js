@@ -5,11 +5,17 @@ import {Alert, Modal, Text, View, Picker, StyleSheet, Map, DeviceEventEmitter, S
 import MenuButton from './components/MenuButton';
 import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
 import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import AsyncStorage from '@react-native-community/async-storage';
 
 import Dial from './Dial';
 import DigitalInp from './DigitalInp';
 import { Col, Row, Grid } from "react-native-easy-grid";
 import { Icon} from 'native-base'
+
+const ObdUtils = require('./utils/ObdUtils');
+
+const STORAGE_KEY = '@screen_setup';
+const STORAGE_KEY_SCREENS = '@screens';
 
 export default class WidgetSettings extends React.Component
 {
@@ -18,7 +24,40 @@ export default class WidgetSettings extends React.Component
         super(props);
         this.state =
         {
-            speed: 40
+            speed: 40,
+            numberScreens: 2
+        }
+        this.readScreenConfigFromStorage();
+    }
+    
+    componentDidUpdate()
+    {
+        this.writeScreenConfigToStorage();
+    }
+    
+    readScreenConfigFromStorage = async () => {
+        
+        try
+        {
+            var item = await AsyncStorage.getItem(STORAGE_KEY_SCREENS);
+            var itemJSON = JSON.parse(item);
+            this.setState({numberScreens: itemJSON});
+        }
+        catch (e) 
+        {
+            console.log(e);
+        }
+    }
+
+    writeScreenConfigToStorage = async () => {
+        try
+        {
+            var screenSetupJSON = JSON.stringify(this.state.numberScreens);
+            await AsyncStorage.setItem(STORAGE_KEY_SCREENS, screenSetupJSON);
+        }
+        catch (e)
+        {
+            console.log(e);
         }
     }
     
@@ -37,6 +76,14 @@ export default class WidgetSettings extends React.Component
             <NavTitle style={{marginTop: 5, flex:1}}>
               Widgets
             </NavTitle>
+                <Picker
+                    mode='dropdown'
+                    selectedValue={this.state.numberScreens}
+                    onValueChange={(itemValue, itemIndex) => {this.setState({numberScreens: itemValue});} }
+                    style={{height: 40, width: 80}}>
+                    <Picker.Item label="2" value={2} />
+                    <Picker.Item label="4" value={4} />
+                </Picker>
             </NavBar>
             <ScrollView>
             <Grid>
@@ -62,25 +109,87 @@ class WidgetSettingsPane extends Component
         this.state = {
             modalVisible: false,
             finishedWidgetSetup: false,
+            screenSetup: {
+            },
             widgetSettings: {
-                "data" : "",
-                "ec" : "",
-                "mc" : "",
-                "screen" : 0
+                "clockType" : this.props.widgetType,
+                data: "",
+                ec: "",
+                mc: "",
+                screen: 0
             }
         };
     }
+    
+    static defaultProps = {
+        screens: 2
+    };
 
-    setModalVisible(visible)
-    {
-        if(this.state.finishedWidgetSetup)
+    readAndWriteNewWidgetConfig = async () => {
+        try
         {
-            this.setState({modalVisible: visible});
+            var screenSetup = await AsyncStorage.getItem(STORAGE_KEY);
+            var screenSetupJSON = JSON.parse(screenSetup);
+            if(screenSetupJSON == null)
+            {
+                screenSetupJSON = {};
+            }
+            console.log("reading", screenSetupJSON);
+            
+            screenSetupJSON[this.state.widgetSettings.screen] = this.state.widgetSettings;
+            screenSetupJSON[this.state.widgetSettings.screen].cmdID = ObdUtils.cmdIDMap[this.state.widgetSettings.data];
+            
+            var screenSetupJSON = JSON.stringify(screenSetupJSON);
+            console.log("writing", screenSetupJSON);
+            await AsyncStorage.setItem(STORAGE_KEY, screenSetupJSON);
+            
+            this.setState(
+            {
+                finishedWidgetSetup: false,
+                widgetSettings:
+                {
+                    "clockType" : this.props.widgetType,
+                    "data" : "",
+                    "ec" : "",
+                    "mc" : "",
+                    "screen" : 0
+                }
+            }
+            );
+        }
+        catch (e)
+        {
+            console.log(e);
+        }
+    }
+
+    setModalVisible(visible, closeWithoutSaving)
+    {
+        if(this.state.finishedWidgetSetup && !closeWithoutSaving && this.state.screenSetup)
+        {
+            this.setState({modalVisible: false});
             
             //add gauge to ASyncConfig Here
-            
+            this.readAndWriteNewWidgetConfig();
             
             Alert.alert('Gauge Added to Dashboard');
+        }
+        else if(closeWithoutSaving)
+        {
+            this.setState(
+            {
+                finishedWidgetSetup: false,
+                widgetSettings:
+                {
+                    "clockType" : this.props.widgetType,
+                    "data" : "",
+                    "ec" : "",
+                    "mc" : "",
+                    "screen" : 0
+                },
+                modalVisible: false
+            }
+            );
         }
         else
         {
@@ -95,21 +204,21 @@ class WidgetSettingsPane extends Component
             case "digital":
                 return(
                     <TouchableHighlight underlayColor='#DDDDDD' onPress={() => {this.setState({modalVisible: true});}}>
-                    <DigitalInp title="Digital Gauge:" digitStyles={{lineStyle : "#00FF00", fillStyle : "#888888"}}/>
+                    <DigitalInp title="Digital:" digitStyles={{lineStyle : "#00FF00", fillStyle : "#888888"}}/>
                     </TouchableHighlight>
                 );
 
             case "analog":
                 return(
                     <TouchableHighlight underlayColor='#DDDDDD' onPress={() => { this.setState({modalVisible: true});}}>
-                    <Dial title="Analog Gauge:" value={0} />
+                    <Dial title="Analog Gauge:" value={0} maxValue={100} />
                     </TouchableHighlight>
                 );
 
             default:
                 return(
                     <TouchableHighlight underlayColor='#DDDDDD' onPress={() => { this.setState({modalVisible: true});}}>
-                    <Dial title="Analog Gauge:" value={0} />
+                    <Dial title="Analog Gauge:" value={0} maxValue={100}/>
                     </TouchableHighlight>
                 );
         }
@@ -117,6 +226,7 @@ class WidgetSettingsPane extends Component
     
     setGaugeSetting(key, setting)
     {
+        console.log("called");
         var currentSetting = this.state.widgetSettings;
         currentSetting[key] = setting;
         this.setState({currentSetting});
@@ -174,7 +284,7 @@ class WidgetSettingsPane extends Component
                         <Picker.Item
                             label='Select Data Input' 
                             value='0'/>
-                            {analogInputs.map((item, key) => <Picker.Item label={item.name} value={item.address}/>)}
+                            {ObdUtils.digitalInputs.map((item, key) => <Picker.Item label={item.name} value={item.address} key={item.address}/>)}
                         </Picker>
                     </Col>
                 </Row>
@@ -192,7 +302,7 @@ class WidgetSettingsPane extends Component
                         <Picker.Item
                             label='Select Edge Colour' 
                             value=''/>
-                            {presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode}/>)}
+                            {ObdUtils.presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode} key={item.rgbCode}/>)}
                         </Picker>
                     </Col>
                 </Row>
@@ -210,8 +320,16 @@ class WidgetSettingsPane extends Component
                         <Picker.Item
                             label='Select Main Colour' 
                             value=''/>
-                            {presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode}/>)}
+                            {ObdUtils.presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode} key={item.rgbCode}/>)}
                         </Picker>
+                    </Col>
+                </Row>
+                <Row size={8} style={styles.widgetStyle}>
+                    <Col size={1}>
+                        <Text style={styles.settingsSubHead}>Screen Position</Text>
+                    </Col>
+                    <Col size={3}>
+                        {this.getStatsDashSetup()}
                     </Col>
                 </Row>
                 </Grid>
@@ -236,7 +354,7 @@ class WidgetSettingsPane extends Component
                         <Picker.Item
                             label='Select Data Input' 
                             value='0'/>
-                        {analogInputs.map((item, key) => <Picker.Item label={item.name} value={item.address}/>)}
+                            {ObdUtils.analogInputs.map((item, key) => <Picker.Item label={item.name} value={item.address} key={item.address}/>)}
                         </Picker>
                     </Col>
                 </Row>
@@ -254,7 +372,7 @@ class WidgetSettingsPane extends Component
                         <Picker.Item
                             label='Select Bg Colour' 
                             value=''/>
-                            {presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode}/>)}
+                            {ObdUtils.presetColors.map((item, key) => <Picker.Item label={item.name} value={item.rgbCode} key={item.rgbCode}/>)}
                         </Picker>
                     </Col>
                 </Row>
@@ -316,13 +434,13 @@ class WidgetSettingsPane extends Component
               transparent={false}
               visible={this.state.modalVisible}
               onRequestClose={() => {
-                this.setState({modalVisible: false});
+                this.setModalVisible(false, true);
               }}>
                   <NavBar>
                     <NavGroup>
                     <NavButton>
                         <Icon name="arrow-back" style={{ marginLeft: 5, fontSize: 24, color:'#000000'}}
-                         onPress={() => { this.setState({modalVisible: false}); }} />
+                         onPress={() => { this.setModalVisible(false, true); }} />
                     </NavButton>
                     </NavGroup>
                     <NavTitle style={{flex:1}}>
@@ -331,7 +449,7 @@ class WidgetSettingsPane extends Component
                     <NavGroup>
                     <NavButton>
                         <Icon name="md-checkbox" style={{ marginLeft: 5, fontSize: 24, color:'#00AA00'}}
-                         onPress={() => { this.setModalVisible(!this.state.modalVisible); }} />
+                         onPress={() => { this.setModalVisible(false, false); }} />
                     </NavButton>
                     </NavGroup>
                     </NavBar>
@@ -342,54 +460,6 @@ class WidgetSettingsPane extends Component
         );
     }
 }
-
-const analogInputs = 
-      [
-          {
-              name: "Speed",
-              address: "speed"
-          },
-          {
-              name: "RPM",
-              address: "rpm"
-          },
-          {
-              name: "Throttle Position",
-              address: "tp"
-          },
-      ];
-
-const digitalInputs = 
-      [
-          {
-              name: "Speed",
-              address: "speed"
-          },
-          {
-              name: "RPM",
-              address: "rpm"
-          },
-          {
-              name: "Throttle Position",
-              address: "tp"
-          },
-      ];
-
-const presetColors = 
-      [
-          {
-              name: "Red",
-              rgbCode: "#FF0000"
-          },
-          {
-              name: "Green",
-              rgbCode: "#00FF00"
-          },
-          {
-              name: "Black",
-              rgbCode: "#000000"
-          },
-      ];
 
 const styles = StyleSheet.create({
     bodyContainer:

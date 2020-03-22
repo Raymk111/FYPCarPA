@@ -7,6 +7,8 @@ import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-nati
 
 import { Actions } from 'react-native-router-flux';
 
+const Color = require('./utils/Color');
+
 export default class Settings extends React.Component
 {
     constructor(props)
@@ -96,13 +98,17 @@ export default class Settings extends React.Component
 }
 
 const styles = StyleSheet.create({
-  bodyContainer: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginTop: 25,
-    color: '#000000'
-  },
-  btDeviceContainer: {
-    backgroundColor: '#999999'
-  }
+    bodyContainer: {
+        fontSize: 20,
+        textAlign: 'center',
+        marginTop: 25,
+        color: '#000000'
+    },
+    btDeviceContainer: {
+        backgroundColor: '#999999'
+    },
+    navBar : {
+        backgroundColor: Color.NAVBAR
+    }
+
 });

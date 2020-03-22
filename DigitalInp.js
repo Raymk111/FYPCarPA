@@ -15,46 +15,79 @@ export default class DigitalInp extends React.Component
     constructor(props)
     {
         super(props);
-        var digiStyles = this.props.digitStyles ? this.props.digitStyles : {lineStyle : "#00FF00", fillStyle : "#000000"};
-        this.state = 
-        {
-            value : "888",
-            format : "ddd",
-            digitStyles : digiStyles
-        }
+    }
+    
+    static defaultProps = {
+        value : "888",
+        format : "ddd",
+        digitStyles : {lineStyle : "#00FF00", fillStyle : "#000000"},
+        scale : 2
     }
     
     handleCanvas = (canvas) => {
         if(canvas)
         {
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = this.state.digitStyles.lineStyle;
-            ctx.fillStyle = this.state.digitStyles.fillStyle;
-            ctx.scale(2, 2);
-            ctx.translate(0, 12);
+            console.log(this.props.value);
+            canvas.width = 45 * this.props.scale * this.props.format.length;
+            canvas.height = 120 * this.props.scale;
+            const context = canvas.getContext('2d');
             
-            if(this.state.value.length == this.state.format.length)
-            {
-                for(var i = 0; i < this.state.value.length; i++)
-                {
-                    this.drawNum(ctx, parseInt(this.state.value.charAt(i)), i);
-                    ctx.restore();
-                    ctx.translate(44, 0);
-                }
-            }
-            else
-            {
-                for(var i = 0; i < this.state.format.length; i++)
-                {
-                    this.drawNum(ctx, 9, i);
-                    ctx.restore();
-                    ctx.translate(44, 0);
-                }
-            }
-            ctx.stroke();
-            ctx.fill();
+            this.paintOut(context);
         }
     };
+
+    paintOut(ctx)
+    {
+        ctx.strokeStyle = this.props.digitStyles.lineStyle;
+        ctx.fillStyle = this.props.digitStyles.fillStyle;
+
+        ctx.scale(this.props.scale, this.props.scale);
+        ctx.translate(0, 12);
+
+        //title work
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.props.title, 44*(this.props.format.length/2), 85);
+
+        var value = parseInt(this.props.value).toString();
+        if(value && value.length == this.props.format.length)
+        {
+            for(var i = 0; i < value.length; i++)
+            {
+                this.drawNum(ctx, parseInt(value.charAt(i)), i);
+                ctx.restore();
+                ctx.translate(44, 0);
+            }
+        }
+        else if(value.length)
+        {
+            for(var i = 0; i < this.props.format.length - value.length; i++)
+            {
+                this.drawNum(ctx, 0, i);
+                ctx.restore();
+                ctx.translate(44, 0);
+            }
+
+            for(var i = 0; i < value.length; i++)
+            {
+                this.drawNum(ctx, parseInt(value.charAt(i)), i);
+                ctx.restore();
+                ctx.translate(44, 0);
+            }
+        }
+        else
+        {
+            for(var i = 0; i < this.props.format.length; i++)
+            {
+                this.drawNum(ctx, 0, i);
+                ctx.restore();
+                ctx.translate(44, 0);
+            }
+        }
+        
+        ctx.stroke();
+        ctx.fill();
+    }
     
     drawSegment = (ctx) =>
     {
@@ -106,7 +139,7 @@ export default class DigitalInp extends React.Component
                     break;
                 case 1:
                     //top right seg
-                    ctx.translate(32, 0);
+                    ctx.translate(32, -6);
                     this.drawSegment(ctx);
                     
                     //bottom right seg
@@ -337,11 +370,11 @@ export default class DigitalInp extends React.Component
     render()
     {
         return(
-            <SafeAreaView>
-            <Text style={styles.titleContainer}>{this.props.title}</Text>
-            <Canvas ref={this.handleCanvas} style={styles.canvasStyle}/>
-            </SafeAreaView>
-            );
+        <SafeAreaView>
+            <Canvas ref={this.handleCanvas} style={[styles.canvasStyle, {width: 45 * this.props.scale * this.props.format.length}]}/>
+        </SafeAreaView>
+        );
+
     }
 }
 
@@ -349,11 +382,10 @@ const styles = StyleSheet.create(
     {
         canvasStyle :
         {
-            height: 150,
-            width: 260,
             flexDirection: 'row',
             flex: 1,
-            justifyContent: 'space-around'
+            alignItems: 'center',
+            justifyContent:'space-around'
         },
         
         titleContainer :

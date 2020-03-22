@@ -39,8 +39,9 @@ export default class MenuDrawer extends React.Component {
 						</View>
 					</View>
 					<View style={styles.bottomLinks}>
-						{this.navLink('statsDash', 'Live Dash', 'speedometer')}
+						{this.navLink('customDash', 'Live Dash', 'speedometer')}
 						{this.navLink('settings', 'Settings', 'settings')}
+                        {this.navLink('defaultDash', 'Default Dash', 'speedometer')}
 					</View>
 				</ScrollView>
 			</View>

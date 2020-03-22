@@ -15,26 +15,29 @@ export default class Dial extends React.Component
     constructor(props)
     {
         super(props);
+        this.circleStyle = 
+        {
+            overflow: 'hidden',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            backgroundColor: this.props.backColor ? this.props.backColor : '#ffffff'
+        };
     }
+    
+    static defaultProps = {
+        scale: 2
+    };
     
     render()
     {
         return(
             <SafeAreaView>
             <Text style={styles.titleContainer}>{this.props.title}</Text>
-            <RNSpeedometer value={this.props.value} size={300} labels = {labels} innerCircleStyle={circleStyle}/>
+            <RNSpeedometer value={parseInt(this.props.value)} maxValue={this.props.maxValue} size={parseInt(150 * this.props.scale)} labels = {labels} innerCircleStyle={this.circleStyle}/>
             </SafeAreaView>
         )
     }
 }
-
-const circleStyle = 
-      {
-          overflow: 'hidden',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          backgroundColor: '#ffffff'
-      };
 
 const labels = [
     {
