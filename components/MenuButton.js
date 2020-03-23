@@ -5,7 +5,7 @@ import { Icon } from 'native-base'
 export default class MenuButton extends React.Component {
 	render() {
 		return(
-			<Icon name="menu" style={{ marginLeft: 5, fontSize: 24, color:'#000000'}}
+			<Icon name="menu" style={{ marginLeft: 5, fontSize: 24, color:'#aaaaaa'}}
 				onPress={() => this.props.navigation.toggleDrawer()}
 			/>
 		)

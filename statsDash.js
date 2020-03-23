@@ -2,19 +2,23 @@
 
 import React, { Component } from 'react';
 import {
-  StyleSheet,
-  Text,
-  Image,
-  View,
-  DeviceEventEmitter,
-  ScrollView
+    StyleSheet,
+    Text,
+    Image,
+    View,
+    DeviceEventEmitter,
+    ScrollView,
+    SafeAreaView,
+    StatusBar
 } from 'react-native';
 
 import { Actions } from 'react-native-router-flux';
 import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MenuButton from './components/MenuButton';
-import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
-import SharedPreference from 'react-native-shared-preferences';
+import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
+import AsyncStorage from '@react-native-community/async-storage';
+import { Themes } from './utils/Theme.js';
+import { DbKeys } from './utils/DbKeys';
 
 const obd2 = require('react-native-obd2');
 const Color = require('./utils/Color');
@@ -106,6 +110,7 @@ export default class statsDash extends React.Component {
         this.obdStatusListener = DeviceEventEmitter.addListener('obd2Status', this.obdStatus);
 
         this.setDeviceAddressListener = DeviceEventEmitter.addListener('setBTDeviceAddress', this.setDeviceAddress.bind(this));
+        this.readBTDeviceFromStorage();
 
         this.onReady();
     }
@@ -126,7 +131,7 @@ export default class statsDash extends React.Component {
     {
         
         this.obdLiveDataListener = DeviceEventEmitter.addListener('obd2LiveData', this.obdLiveData);
-        obd2.setMockUpMode(false);
+        obd2.setMockUpMode(true);
         obd2.startLiveData(this.state.btSelectedDeviceAddress);
         this.setState({isStartLiveData: true});
     }
@@ -141,6 +146,34 @@ export default class statsDash extends React.Component {
         
         this.obdLiveDataListener && this.obdLiveDataListener.remove();
         obd2.stopLiveData();
+        
+        this.writeKnownKeys();
+    }
+    
+    writeKnownKeys = async () => {
+        try
+        {
+            var readKeysString = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_READKEYS);
+            console.log('read', readKeysString);
+            var readKeys = JSON.parse(readKeysString);
+            if(readKeys && readKeys != "" && this.state.obd2Data)
+            {
+                readKeys[this.state.btSelectedDeviceAddress] = this.state.obd2Data;
+                console.log('write 1', readKeys);
+                await AsyncStorage.setItem(DbKeys.STORAGE_KEY_READKEYS, JSON.stringify(readKeys));
+            }
+            else if(this.state.obd2Data)
+            {
+                var newAdaptorReadKeysObj = {};
+                newAdaptorReadKeysObj[this.state.btSelectedDeviceAddress] = this.state.obd2Data;
+                console.log('write all', newAdaptorReadKeysObj);
+                await AsyncStorage.setItem(DbKeys.STORAGE_KEY_READKEYS, JSON.stringify(newAdaptorReadKeysObj));
+            }
+        }
+        catch(e)
+        {
+            console.log(e);
+        }
     }
 
     setDeviceAddress(aDeviceAddress)
@@ -164,6 +197,23 @@ export default class statsDash extends React.Component {
             break;
         }
     }
+    
+    readBTDeviceFromStorage = async () => {
+        
+        try
+        {
+            var item = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_BTADDR);
+            if(item != "0")
+            {
+                console.log('set', item);
+                this.setState({btSelectedDeviceAddress : item});
+            }
+        }
+        catch (e) 
+        {
+            console.log(e);
+        }
+    }
 
     render()
     {
@@ -175,34 +225,35 @@ export default class statsDash extends React.Component {
         
         return(
             <MenuProvider style={{flex: 1, backgroundColor: "#aaaaaa"}}  skipInstancesCheck={true}>
-            <View style={{flex: 1}}> 
-                <NavBar>
-                    <NavGroup style={{marginLeft: 5, flex:0}}>
+            <View style={{flex: 1}}>
+            <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
+            <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
+                    <NavButton>
                         <MenuButton navigation={this.props.navigation} />
-                    </NavGroup>
-                    <NavTitle style={{marginTop: 5, flex:1}}>
+                    </NavButton>
+                    <Text style={Themes.navBarTitle}>
                         Dashboard
-                    </NavTitle>
-                    <NavGroup style={{marginTop: 5, flex:0}}>
-                        <NavButton>
-                            <Menu onSelect={this.runMenu.bind(this)}>
-                                <MenuTrigger>
-                                    <Text style={{marginRight: 10, padding: 10, alignSelf: 'center', fontSize: 20}}>
-                                        &#8942;
-                                    </Text>
-                                </MenuTrigger>
-                                <MenuOptions>
-                                    <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
-                                        <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
-                                    </MenuOption>
-                                    <MenuOption disabled={!this.state.isStartLiveData} value={2}>
-                                        <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
-                                    </MenuOption>
-                                </MenuOptions>
-                            </Menu>
-                        </NavButton>
-                    </NavGroup>
-                </NavBar>
+                    </Text>
+                    <NavButton>
+                        <Menu onSelect={this.runMenu.bind(this)}>
+                            <MenuTrigger>
+                                <Text style={Themes.navBarRightButton}>
+                                    &#8942;
+                                </Text>
+                            </MenuTrigger>
+                            <MenuOptions>
+                                <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
+                                    <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
+                                </MenuOption>
+                                <MenuOption disabled={!this.state.isStartLiveData} value={2}>
+                                    <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
+                                </MenuOption>
+                            </MenuOptions>
+                        </Menu>
+                    </NavButton>
+                </NavGroup>
+                </SafeAreaView>
                 <View style={styles.bodyContainer}>
                     <View style={{flex: .1, flexDirection:'row', justifyContent: 'space-around'}}>
                         <Text style={{fontSize:30}}>{this.state.speed}</Text>

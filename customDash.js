@@ -2,31 +2,33 @@
 
 import React, { Component } from 'react';
 import {
-  StyleSheet,
-  Text,
-  Image,
-  View,
-  DeviceEventEmitter,
-  Dimensions,
-  ScrollView
+    StyleSheet,
+    Text,
+    Image,
+    View,
+    SafeAreaView,
+    DeviceEventEmitter,
+    Dimensions,
+    ScrollView,
+    StatusBar
 } from 'react-native';
 
 import { Actions } from 'react-native-router-flux';
+import { Orientation } from 'react-native-orientation';
 import { Col, Row, Grid } from "react-native-easy-grid";
 import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MenuButton from './components/MenuButton';
-import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
+import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
 import SharedPreference from 'react-native-shared-preferences';
 import AsyncStorage from '@react-native-community/async-storage';
 import Dial from './Dial';
 import DigitalInp from './DigitalInp';
+import { Themes } from './utils/Theme';
+import { DbKeys } from './utils/DbKeys';
 
 const obd2 = require('react-native-obd2');
 const ObdUtils = require('./utils/ObdUtils');
 const Color = require('./utils/Color');
-
-const STORAGE_KEY = '@screen_setup';
-const STORAGE_KEY_SCREENS = '@screens';
 const WIDTH = Dimensions.get('window').width 
 const HEIGHT = Dimensions.get('window').height 
 
@@ -58,8 +60,9 @@ export default class customDash extends React.Component {
 
         try
         {
-            var item = await AsyncStorage.getItem(STORAGE_KEY);
-            var screenNumber = await AsyncStorage.getItem(STORAGE_KEY_SCREENS);
+            var item = await AsyncStorage.getItem(DbKeys.STORAGE_KEY);
+            var screenNumber = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_SCREENS);
+            var btAddress = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_BTADDR);
             
             if(item != null && item.length > 0)
             {
@@ -78,14 +81,23 @@ export default class customDash extends React.Component {
                             this.dataSubList.push({data: itemJSON[(i+1).toString()].data, cmdID: itemJSON[(i+1).toString()].cmdID});
                         }
                     }
+                    
+                    //checkbtAddress
+                    if(btAddress == "0")
+                    {
+                       btAddress = ''; 
+                    }
+                    
                     gotSettings = true;
                 }
                 
                 if(gotSettings)
                 {
+                    console.log(screenSetupArr, btAddress, screenNumber);
                     this.setState(
                     {
                         screenSetup: screenSetupArr,
+                        btSelectedDeviceAddress: btAddress,
                         screens : JSON.parse(screenNumber)
                     });
                 }
@@ -146,9 +158,10 @@ export default class customDash extends React.Component {
         this.btStatusListener = DeviceEventEmitter.addListener('obd2BluetoothStatus', this.btStatus);
         this.obdStatusListener = DeviceEventEmitter.addListener('obd2Status', this.obdStatus);
         this.setDeviceAddressListener = DeviceEventEmitter.addListener('setBTDeviceAddress', this.setDeviceAddress.bind(this));
-
-        this.onReady();
+        
         this.readScreenSettings();
+        
+        this.onReady();
     }
 
     componentWillUnmount()
@@ -219,12 +232,12 @@ export default class customDash extends React.Component {
             {
                 case "digital":
                     return(
-                        <DigitalInp key={this.state[widgetConfig.data]} title={widgetConfig.data} value={this.state[widgetConfig.data]} format={ObdUtils.dataFormats[widgetConfig.data]} digitStyles={{lineStyle : widgetConfig.ec, fillStyle : widgetConfig.mc}} scale={scale} />
+                        <DigitalInp key={this.state[widgetConfig.data]} title={ObdUtils.units[widgetConfig.data]} value={this.state[widgetConfig.data]} format={ObdUtils.dataFormats[widgetConfig.data]} digitStyles={{lineStyle : widgetConfig.ec, fillStyle : widgetConfig.mc}} scale={scale} />
                     );
 
                 case "analog":
                     return(
-                        <Dial title={widgetConfig.data} value={this.state[widgetConfig.data]} maxValue={ObdUtils.maxValues[widgetConfig.data]} scale={scale} backColor={widgetConfig.mc}/>
+                        <Dial title={ObdUtils.units[widgetConfig.data]} value={this.state[widgetConfig.data]} maxValue={ObdUtils.maxValues[widgetConfig.data]} scale={scale} backColor={widgetConfig.mc}/>
                     );
 
                 default:
@@ -237,6 +250,16 @@ export default class customDash extends React.Component {
         return(
             <Text>No Gauge Set</Text>
         );
+    }
+
+    _orientationDidChange = (orientation) => {
+        if (orientation === 'LANDSCAPE') {
+          // do something with landscape layout
+            console.log(orientation);
+        } else {
+          // do something with portrait layout
+            console.log(orientation);
+        }
     }
 
     getWidgets()
@@ -286,42 +309,40 @@ export default class customDash extends React.Component {
         let stopLiveColor = this.state.isStartLiveData ? Color.BLACK : Color.DISABLED_COLOR;
         
         return(
-            <NavBar>
-            <NavGroup style={{marginLeft: 5, flex:0}}>
-                <MenuButton navigation={this.props.navigation} />
-            </NavGroup>
-            <NavTitle style={{marginTop: 5, flex:1}}>
-              Dashboard
-            </NavTitle>
-            <NavGroup style={{flex:0}}>
-              <NavButton>
-                <Menu onSelect={this.runMenu.bind(this)}>
-                  <MenuTrigger>
-                    <Text style={{
-                      marginRight: 10,
-                      padding: 10,
-                      alignSelf: 'center', 
-                      fontSize: 20,
-                      }}>&#8942;</Text>
-                  </MenuTrigger> 
-                  <MenuOptions>
-                    <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
-                      <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
-                    </MenuOption>
-                    <MenuOption disabled={!this.state.isStartLiveData} value={2}>
-                      <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
-                    </MenuOption>
-                    <MenuOption value={3}>
-                      <Text style={[styles.menuOptionText, {color: '#00ff00'}]}>Edit/Add Widgets</Text>
-                    </MenuOption>
-                    <MenuOption value={4}>
-                      <Text style={[styles.menuOptionText]}>Refresh Screen Setup</Text>
-                    </MenuOption>
-                  </MenuOptions>
-                </Menu>
-            </NavButton>
-            </NavGroup>
-            </NavBar>
+            <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+            <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
+                    <NavButton>
+                        <MenuButton navigation={this.props.navigation} />
+                    </NavButton>
+                    <Text style={Themes.navBarTitle}>
+                        Dashboard
+                    </Text>
+                    <NavButton>
+                        <Menu onSelect={this.runMenu.bind(this)}>
+                            <MenuTrigger>
+                                <Text style={Themes.navBarRightButton}>
+                                    &#8942;
+                                </Text>
+                            </MenuTrigger>
+                            <MenuOptions>
+                                <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
+                                    <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
+                                </MenuOption>
+                                <MenuOption disabled={!this.state.isStartLiveData} value={2}>
+                                    <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
+                                </MenuOption>
+                                <MenuOption value={3}>
+                                    <Text style={[styles.menuOptionText, {color: '#00ff00'}]}>Edit/Add Widgets</Text>
+                                </MenuOption>
+                                <MenuOption value={4}>
+                                    <Text style={[styles.menuOptionText]}>Refresh Screen Setup</Text>
+                                </MenuOption>
+                            </MenuOptions>
+                        </Menu>
+                    </NavButton>
+                </NavGroup>
+            </SafeAreaView>
         );
     }
 

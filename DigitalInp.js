@@ -39,7 +39,7 @@ export default class DigitalInp extends React.Component
     paintOut(ctx)
     {
         ctx.strokeStyle = this.props.digitStyles.lineStyle;
-        ctx.fillStyle = this.props.digitStyles.fillStyle;
+        ctx.fillStyle = 'this.props.digitStyles.fillStyle';
 
         ctx.scale(this.props.scale, this.props.scale);
         ctx.translate(0, 12);
@@ -47,8 +47,9 @@ export default class DigitalInp extends React.Component
         //title work
         ctx.font = "20px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.props.title, 44*(this.props.format.length/2), 85);
+        ctx.fillText(this.props.title, 40*(this.props.title.length > 7 ? this.props.format.length/2 : this.props.format.length ), 85);
 
+        //if the number fits the format put it up
         var value = parseInt(this.props.value).toString();
         if(value && value.length == this.props.format.length)
         {
@@ -59,12 +60,10 @@ export default class DigitalInp extends React.Component
                 ctx.translate(44, 0);
             }
         }
-        else if(value.length)
+        else if(value && value.length < this.props.format.length)//if not move up
         {
             for(var i = 0; i < this.props.format.length - value.length; i++)
             {
-                this.drawNum(ctx, 0, i);
-                ctx.restore();
                 ctx.translate(44, 0);
             }
 
@@ -79,7 +78,7 @@ export default class DigitalInp extends React.Component
         {
             for(var i = 0; i < this.props.format.length; i++)
             {
-                this.drawNum(ctx, 0, i);
+                this.drawNum(ctx, 9, i);
                 ctx.restore();
                 ctx.translate(44, 0);
             }

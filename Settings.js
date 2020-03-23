@@ -1,11 +1,14 @@
 import React, { Component } from 'react'
 const obd2 = require('react-native-obd2');
 
-import {Text, View, Picker, StyleSheet, Map, DeviceEventEmitter} from 'react-native';
+import {Text, View, ScrollView, Picker, StyleSheet, Map, DeviceEventEmitter, SafeAreaView, StatusBar} from 'react-native';
 import MenuButton from './components/MenuButton';
-import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
+import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
+import AsyncStorage from '@react-native-community/async-storage';
 
 import { Actions } from 'react-native-router-flux';
+import { Themes } from './utils/Theme';
+import { DbKeys } from './utils/DbKeys';
 
 const Color = require('./utils/Color');
 
@@ -20,6 +23,7 @@ export default class Settings extends React.Component
                 loading: true,
                 selectedAddress: 0
             }
+        this.readBTDeviceFromStorage();
     }
 
     componentDidMount() {
@@ -41,17 +45,17 @@ export default class Settings extends React.Component
         {
             return(
                 <View> 
-                <NavBar>
-                <NavGroup style={{marginLeft: 5, flex:0}}>
+                    <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
+                <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
                     <NavButton>
                         <MenuButton navigation={this.props.navigation} />
                     </NavButton>
+                    <Text style={Themes.navBarTitle}>
+                        Settings
+                    </Text>
                 </NavGroup>
-                <NavTitle style={{marginTop: 5}}>
-                  Settings
-                </NavTitle>
-                <Text style={styles.bodyContainer}>loading...</Text>
-                </NavBar>
+                </SafeAreaView>
                 </View>
             );
         }
@@ -59,19 +63,21 @@ export default class Settings extends React.Component
         {
             return(
             <>
-                <View style={{flex: 1}}> 
-                <NavBar>
-                <NavGroup style={{marginLeft: 5, flex:0}}>
+                <View style={styles.bodyContainer}>
+                <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
+                <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
                     <NavButton>
                         <MenuButton navigation={this.props.navigation} />
                     </NavButton>
+                    <Text style={Themes.navBarTitle}>
+                        Settings
+                    </Text>
                 </NavGroup>
-                <NavTitle style={{marginTop: 5, flex:1}}>
-                  Settings
-                </NavTitle>
-                </NavBar>
-                <View style={styles.btDeviceContainer}>
-                <Text style={styles.bodyContainer}>Bluetooth Adaptor Device:</Text>
+                </SafeAreaView>
+                <ScrollView>
+                <View style={styles.settingContainer}>
+                <Text style={styles.headerContainer}>Bluetooth Adaptor Device:</Text>
                 <Picker
                   mode='dropdown'
                   style={{backgroundColor: '#aaaaaa'}}
@@ -81,34 +87,115 @@ export default class Settings extends React.Component
                 <Picker.Item
                     label='Select Bluetooth ELM327 Adapter' 
                     value='0'/>
-                {this.state.bluetoothDevices.map((item, key) => <Picker.Item label={item.name} value={item.address}/>)}
+                        <Picker.Item
+                    label='test' 
+                    value='test'/>
+                {this.state.bluetoothDevices.map((item, key) => <Picker.Item label={item.name} value={item.address} key={item.address}/>)}
                 </Picker>
                 </View>
+                <View style={styles.settingContainer}>
+                <Text style={styles.headerContainer}>Data Keys Read From Device:</Text>
+                <ScrollView style={{height: 160, backgroundColor: '#aaaaaa'}}>
+                {this.produceReadKeys()}
+                </ScrollView>
+                </View>
+                </ScrollView>
                 </View>
             </>
             );
         }
     }
+    
+    produceReadKeys()
+    {
+        if(this.state.adaptorReadKeyMap && this.state.adaptorReadKeyMap[this.state.selectedAddress])
+            {
+                let cmdAll = this.state.adaptorReadKeyMap[this.state.selectedAddress];
+                let cmdKeys = Object.keys(cmdAll);
+                let cmdData = cmdKeys.map(function(key) { return cmdAll[key]; });
+                return(
+                    <>
+                    {
+                        cmdData.map(
+                            (item, key) => 
+                                (
+                                    <Text style={{fontSize: 15}}>
+                                        {item.cmdName} => Last Value {item.cmdResult}
+                                    </Text>
+                                )
+                        )
+                    }
+                    </>
+                );
+            }
+        else
+        {
+            return(
+                <Text style={{fontSize: 20}}>
+                    Data Name => Data Key
+                </Text>
+            );
+            
+        }
+    }
 
     setDeviceAddress(aDeviceAddress)
     {
-        this.setState({selectedAddress : aDeviceAddress});
-        DeviceEventEmitter.emit('setBTDeviceAddress', aDeviceAddress);
+        if(this.state.selectedAddress != aDeviceAddress && aDeviceAddress != "0")
+        {
+            this.setState({selectedAddress : aDeviceAddress});
+            DeviceEventEmitter.emit('setBTDeviceAddress', aDeviceAddress);
+            this.writeBTDeviceToStorage(aDeviceAddress);
+        }
+    }
+
+    readBTDeviceFromStorage = async () => {
+        
+        try
+        {
+            var item = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_BTADDR);
+            
+            var readKeysString = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_READKEYS);
+            
+            console.log('read', item, readKeysString);
+            var readKeys = JSON.parse(readKeysString);
+            this.setState({selectedAddress : item, adaptorReadKeyMap: readKeys});
+        }
+        catch (e) 
+        {
+            console.log(e);
+        }
+    }
+
+    writeBTDeviceToStorage = async (aDeviceAddress) => {
+        
+        try
+        {
+            await AsyncStorage.setItem(DbKeys.STORAGE_KEY_BTADDR, aDeviceAddress);
+            console.log('write', aDeviceAddress);
+        }
+        catch (e) 
+        {
+            console.log(e);
+        }
     }
 }
 
 const styles = StyleSheet.create({
     bodyContainer: {
+        flex: 1,
+        backgroundColor: '#aaaaaa'
+    },
+    headerContainer: {
         fontSize: 20,
         textAlign: 'center',
         marginTop: 25,
         color: '#000000'
     },
-    btDeviceContainer: {
-        backgroundColor: '#999999'
-    },
-    navBar : {
-        backgroundColor: Color.NAVBAR
+    settingContainer: {
+        backgroundColor: '#999999',
+        borderWidth: 2,
+        borderColor: '#555555',
+        margin: 4
     }
-
 });

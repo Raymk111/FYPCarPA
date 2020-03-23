@@ -51,6 +51,14 @@ module.exports = {
         },
     ],
     
+    units :
+    {
+        speed: "km/h",
+        rpm: "RPM",
+        aat: "°C",
+        ait: "°C",
+    },
+    
     cmdIDMap :
     {
         speed: "SPEED",

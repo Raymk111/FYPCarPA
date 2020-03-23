@@ -1,21 +1,20 @@
 import React, { Component } from 'react'
 const obd2 = require('react-native-obd2');
 
-import {Alert, Modal, Text, View, Picker, StyleSheet, Map, DeviceEventEmitter, ScrollView, TouchableHighlight} from 'react-native';
+import {Alert, Modal, Text, View, SafeAreaView, Picker, StyleSheet, Map, DeviceEventEmitter, ScrollView, TouchableHighlight, StatusBar} from 'react-native';
 import MenuButton from './components/MenuButton';
-import NavBar, { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
+import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
 import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import AsyncStorage from '@react-native-community/async-storage';
 
 import Dial from './Dial';
 import DigitalInp from './DigitalInp';
 import { Col, Row, Grid } from "react-native-easy-grid";
-import { Icon} from 'native-base'
+import { Icon } from 'native-base';
+import { Themes } from './utils/Theme';
+import { DbKeys } from './utils/DbKeys';
 
 const ObdUtils = require('./utils/ObdUtils');
-
-const STORAGE_KEY = '@screen_setup';
-const STORAGE_KEY_SCREENS = '@screens';
 
 export default class WidgetSettings extends React.Component
 {
@@ -39,7 +38,7 @@ export default class WidgetSettings extends React.Component
         
         try
         {
-            var item = await AsyncStorage.getItem(STORAGE_KEY_SCREENS);
+            var item = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_SCREENS);
             var itemJSON = JSON.parse(item);
             this.setState({numberScreens: itemJSON});
         }
@@ -53,7 +52,7 @@ export default class WidgetSettings extends React.Component
         try
         {
             var screenSetupJSON = JSON.stringify(this.state.numberScreens);
-            await AsyncStorage.setItem(STORAGE_KEY_SCREENS, screenSetupJSON);
+            await AsyncStorage.setItem(DbKeys.STORAGE_KEY_SCREENS, screenSetupJSON);
         }
         catch (e)
         {
@@ -66,26 +65,27 @@ export default class WidgetSettings extends React.Component
         
         return(
         <>
-            <View style={{flex: 1}}> 
-            <NavBar>
-            <NavGroup style={{marginLeft: 5, flex:0}}>
-                <NavButton>
-                    <MenuButton navigation={this.props.navigation} />
-                </NavButton>
-            </NavGroup>
-            <NavTitle style={{marginTop: 5, flex:1}}>
-              Widgets
-            </NavTitle>
+            <View style={{flex: 1}}>
+            <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
+            <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
+                    <NavButton>
+                        <MenuButton navigation={this.props.navigation} />
+                    </NavButton>
+                    <Text style={Themes.navBarTitle}>
+                        Widgets
+                    </Text>
                 <Picker
                     mode='dropdown'
                     selectedValue={this.state.numberScreens}
                     onValueChange={(itemValue, itemIndex) => {this.setState({numberScreens: itemValue});} }
-                    style={{height: 40, width: 80}}>
-                    <Picker.Item label="2" value={2} />
-                    <Picker.Item label="4" value={4} />
+                    style={{height: 40, width: 80, color: '#aaaaaa'}}>
+                    <Picker.Item key={2} label="2" value={2} />
+                    <Picker.Item key={4} label="4" value={4} />
                 </Picker>
-            </NavBar>
-            <ScrollView>
+                </NavGroup>
+                </SafeAreaView>
+            <ScrollView style={styles.bodyContainer}>
             <Grid>
             <Row style={styles.widgetStyle}>
                 <WidgetSettingsPane widgetType="analog"/>
@@ -128,7 +128,7 @@ class WidgetSettingsPane extends Component
     readAndWriteNewWidgetConfig = async () => {
         try
         {
-            var screenSetup = await AsyncStorage.getItem(STORAGE_KEY);
+            var screenSetup = await AsyncStorage.getItem(DbKeys.STORAGE_KEY);
             var screenSetupJSON = JSON.parse(screenSetup);
             if(screenSetupJSON == null)
             {
@@ -141,7 +141,7 @@ class WidgetSettingsPane extends Component
             
             var screenSetupJSON = JSON.stringify(screenSetupJSON);
             console.log("writing", screenSetupJSON);
-            await AsyncStorage.setItem(STORAGE_KEY, screenSetupJSON);
+            await AsyncStorage.setItem(DbKeys.STORAGE_KEY, screenSetupJSON);
             
             this.setState(
             {
@@ -268,7 +268,7 @@ class WidgetSettingsPane extends Component
         {
             case "digital":
                 return(
-                <ScrollView>
+                <ScrollView style={styles.bodyContainer}>
                 <Grid>
                 <Row style={styles.widgetStyle}>
                     <Col size={1}>
@@ -277,7 +277,7 @@ class WidgetSettingsPane extends Component
                     <Col size={3}>
                         <Picker
                           mode='dropdown'
-                          style={{backgroundColor: '#aaaaaa'}}
+                          style={styles.pickerStyles}
                           selectedValue={this.state.widgetSettings.data}
                           onValueChange={(itemValue, itemIndex) => this.setGaugeSetting("data", itemValue) }
                         >
@@ -295,7 +295,7 @@ class WidgetSettingsPane extends Component
                     <Col size={3}>
                         <Picker
                           mode='dropdown'
-                          style={{backgroundColor: '#aaaaaa'}}
+                          style={styles.pickerStyles}
                           selectedValue={this.state.widgetSettings.ec}
                           onValueChange={(itemValue, itemIndex) => this.setGaugeSetting("ec", itemValue) }
                         >
@@ -313,7 +313,7 @@ class WidgetSettingsPane extends Component
                     <Col size={3}>
                         <Picker
                           mode='dropdown'
-                          style={{backgroundColor: '#aaaaaa'}}
+                          style={styles.pickerStyles}
                           selectedValue={this.state.widgetSettings.mc}
                           onValueChange={(itemValue, itemIndex) => this.setGaugeSetting("mc", itemValue) }
                         >
@@ -338,7 +338,7 @@ class WidgetSettingsPane extends Component
 
             case "analog":
                 return(
-                <ScrollView>
+                <ScrollView style={styles.bodyContainer}>
                 <Grid>
                 <Row size={1} style={styles.widgetStyle}>
                     <Col size={1}>
@@ -347,7 +347,7 @@ class WidgetSettingsPane extends Component
                     <Col size={3}>
                         <Picker
                           mode='dropdown'
-                          style={{backgroundColor: '#aaaaaa'}}
+                          style={styles.pickerStyles}
                           selectedValue={this.state.widgetSettings["data"]}
                           onValueChange={(itemValue, itemIndex) => this.setGaugeSetting("data", itemValue) }
                         >
@@ -365,7 +365,7 @@ class WidgetSettingsPane extends Component
                     <Col size={3}>
                         <Picker
                           mode='dropdown'
-                          style={{backgroundColor: '#aaaaaa'}}
+                          style={styles.pickerStyles}
                           selectedValue={this.state.widgetSettings.mc}
                           onValueChange={(itemValue, itemIndex) => this.setGaugeSetting("mc", itemValue) }
                         >
@@ -436,23 +436,21 @@ class WidgetSettingsPane extends Component
               onRequestClose={() => {
                 this.setModalVisible(false, true);
               }}>
-                  <NavBar>
-                    <NavGroup>
+                  <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
+                <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
                     <NavButton>
                         <Icon name="arrow-back" style={{ marginLeft: 5, fontSize: 24, color:'#000000'}}
                          onPress={() => { this.setModalVisible(false, true); }} />
                     </NavButton>
-                    </NavGroup>
-                    <NavTitle style={{flex:1}}>
-                        <Text style={styles.settingsTitle}>{this.props.widgetType.substring(0, 1).toUpperCase() + this.props.widgetType.substring(1)} Gauge Settings</Text>
-                    </NavTitle>
-                    <NavGroup>
+                    <Text style={Themes.navBarTitle}>
+                        {this.props.widgetType.substring(0, 1).toUpperCase() + this.props.widgetType.substring(1)} Gauge Settings
+                    </Text>
                     <NavButton>
-                        <Icon name="md-checkbox" style={{ marginLeft: 5, fontSize: 24, color:'#00AA00'}}
+                        <Icon name="md-checkbox" style={{ marginRight: 10, fontSize: 24, color:'#00AA00'}}
                          onPress={() => { this.setModalVisible(false, false); }} />
                     </NavButton>
                     </NavGroup>
-                    </NavBar>
+                </SafeAreaView>
                 {this.displaySettings(this.props.widgetType)}
             </Modal>
             {this.displayType(this.props.widgetType)}
@@ -464,13 +462,7 @@ class WidgetSettingsPane extends Component
 const styles = StyleSheet.create({
     bodyContainer:
     {
-        fontSize: 20,
-        marginTop: 25,
-        color: '#000000'
-    },
-    btDeviceContainer:
-    {
-        backgroundColor: '#999999'
+        backgroundColor: '#aaaaaa'
     },
     widgetStyle :
     {
@@ -486,6 +478,10 @@ const styles = StyleSheet.create({
     settingsSubHead:
     {
         fontSize: 20
+    },
+    pickerStyles:
+    {
+        backgroundColor: '#bbbbbb',
     },
     screenButtonRow:
     {
