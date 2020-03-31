@@ -154,15 +154,14 @@ export default class statsDash extends React.Component {
         try
         {
             var readKeysString = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_READKEYS);
-            console.log('read', readKeysString);
             var readKeys = JSON.parse(readKeysString);
-            if(readKeys && readKeys != "" && this.state.obd2Data)
+            if(readKeys && readKeys != "" && this.state.obd2Data && this.state.btSelectedDeviceAddress != "")
             {
                 readKeys[this.state.btSelectedDeviceAddress] = this.state.obd2Data;
                 console.log('write 1', readKeys);
                 await AsyncStorage.setItem(DbKeys.STORAGE_KEY_READKEYS, JSON.stringify(readKeys));
             }
-            else if(this.state.obd2Data)
+            else if(this.state.obd2Data && this.state.btSelectedDeviceAddress != "")
             {
                 var newAdaptorReadKeysObj = {};
                 newAdaptorReadKeysObj[this.state.btSelectedDeviceAddress] = this.state.obd2Data;
@@ -224,7 +223,7 @@ export default class statsDash extends React.Component {
         let cmdData = cmdKeys.map(function(key) { return originData[key]; });
         
         return(
-            <MenuProvider style={{flex: 1, backgroundColor: "#aaaaaa"}}  skipInstancesCheck={true}>
+            <MenuProvider style={{flex: 1, backgroundColor: "#aaaaaa"}}  skipInstancesCheck>
             <View style={{flex: 1}}>
             <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
             <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
@@ -274,12 +273,12 @@ export default class statsDash extends React.Component {
                     </View>
                     <View style={{flex: .1, flexDirection:'row', justifyContent: 'space-around'}}>
                         <View>
-                            <Text style={{fontSize:20}}>Bluetooth</Text>
-                            <Text style={{fontSize:20, textAlign: 'center'}}>{this.state.btStatus}</Text>
+                            <Text style={{fontSize:20, textAlign: 'center'}}>Bluetooth</Text>
+                            <Text style={{fontSize:20, textAlign: 'center', textTransform: 'capitalize'}}>{this.state.btStatus}</Text>
                         </View>
                         <View>
-                            <Text style={{fontSize:20}}>OBD</Text>
-                            <Text style={{fontSize:20, textAlign: 'center'}}>{this.state.obdStatus}</Text>
+                            <Text style={{fontSize:20, textAlign: 'center'}}>OBD</Text>
+                            <Text style={{fontSize:20, textAlign: 'center', textTransform: 'capitalize'}}>{this.state.obdStatus}</Text>
                         </View>
                     </View>
                 </View>

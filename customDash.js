@@ -19,8 +19,10 @@ import { Col, Row, Grid } from "react-native-easy-grid";
 import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MenuButton from './components/MenuButton';
 import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
-import SharedPreference from 'react-native-shared-preferences';
 import AsyncStorage from '@react-native-community/async-storage';
+
+import { Button } from 'react-native-elements';
+import { Icon } from 'native-base';
 import Dial from './Dial';
 import DigitalInp from './DigitalInp';
 import { Themes } from './utils/Theme';
@@ -293,11 +295,25 @@ export default class customDash extends React.Component {
             default:
                 return(
                     <>
-                    <Image style={styles.img} source={require('./Images/Gear-512.png')}/>
-                        <Text style={{fontSize: 20, fontWeight: 'bold', textAlign: 'center'}}>Welcome to CarPa</Text>
-                        <Text style={{fontSize: 20}}>Set the BT Device from previously connected devices in settings</Text>
-                        <Text style={{fontSize: 20}}>To test your adaptor you can go to the Default Dash</Text>
-                        <Text style={{fontSize: 20}}>Choose edit add widgets on the top right menu</Text>
+                        <Text style={{fontSize: 32, fontWeight: 'bold', textAlign: 'center'}}>Welcome to CarPA</Text>
+                        <Image style={styles.img} source={require('./Images/Gear-512.png')}/>
+                        <Text style={{fontSize: 20,  marginTop:20, textAlign:'center'}}>Set the Bluetooth adaptor in settings:</Text>
+                            <Button
+                                onPress={() => this.props.navigation.navigate("settings")}
+                                icon={ <Icon name="bluetooth" size={8} />}
+                                buttonStyle={{ backgroundColor:'#00aa00' }}
+                                iconLeft
+                                title="  Open Settings"
+                            />
+                        <Text style={{fontSize: 20,  marginTop:20, textAlign:'center'}}>Test your adaptor in the Default Dash:</Text>
+                            <Button
+                                onPress={() => this.props.navigation.navigate("defaultDash")}
+                                icon={ <Icon name="bluetooth" size={8} />}
+                                buttonStyle={{ backgroundColor:'#00aa00' }}
+                                iconLeft
+                                title="  Test Adaptor"
+                            />
+                        <Text style={{fontSize: 20,  marginTop:20, textAlign:'center'}}>Add widgets in the top right {<Text style={{fontSize:20}}>' &#8942; '</Text>} button</Text>
                     </>
                 );
         }
@@ -350,7 +366,7 @@ export default class customDash extends React.Component {
     render()
     {
         return(
-            <MenuProvider skipInstancesCheck={true}>
+            <MenuProvider skipInstancesCheck>
                 <View style={{flex: 1}}> 
                     {this.header()}
 
@@ -386,8 +402,9 @@ const styles = StyleSheet.create({
     img:
     {
         marginLeft: WIDTH/2 - 100,
-        marginTop: HEIGHT/2 - 200,
+        marginTop: HEIGHT/4 - 150,
         height: 200,
-        width: 200
+        width: 200,
+        backgroundColor: '#aaaaaa'
 	}
 });

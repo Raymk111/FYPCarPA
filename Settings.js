@@ -39,6 +39,11 @@ export default class Settings extends React.Component
         });
     }
     
+    componentDidUpdate()
+    {
+        this.readBTDeviceFromStorage();
+    }
+    
     render()
     {   
         if(this.state.loading)
@@ -85,11 +90,8 @@ export default class Settings extends React.Component
                   onValueChange={(itemValue, itemIndex) => this.setDeviceAddress(itemValue) }
                 >
                 <Picker.Item
-                    label='Select Bluetooth ELM327 Adapter' 
-                    value='0'/>
-                        <Picker.Item
-                    label='test' 
-                    value='test'/>
+                label='Select Bluetooth ELM327 Adapter' 
+                value='0'/>
                 {this.state.bluetoothDevices.map((item, key) => <Picker.Item label={item.name} value={item.address} key={item.address}/>)}
                 </Picker>
                 </View>
@@ -157,9 +159,12 @@ export default class Settings extends React.Component
             
             var readKeysString = await AsyncStorage.getItem(DbKeys.STORAGE_KEY_READKEYS);
             
-            console.log('read', item, readKeysString);
             var readKeys = JSON.parse(readKeysString);
-            this.setState({selectedAddress : item, adaptorReadKeyMap: readKeys});
+            if(this.state.selectedAddress != item || Object.keys(this.state.adaptorReadKeyMap).length != Object.keys(readKeys).length)
+            {
+                console.log('read', item, readKeys);
+                this.setState({selectedAddress : item, adaptorReadKeyMap: readKeys});
+            }
         }
         catch (e) 
         {

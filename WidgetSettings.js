@@ -4,7 +4,6 @@ const obd2 = require('react-native-obd2');
 import {Alert, Modal, Text, View, SafeAreaView, Picker, StyleSheet, Map, DeviceEventEmitter, ScrollView, TouchableHighlight, StatusBar} from 'react-native';
 import MenuButton from './components/MenuButton';
 import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
-import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import AsyncStorage from '@react-native-community/async-storage';
 
 import Dial from './Dial';
