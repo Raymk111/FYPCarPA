@@ -56,7 +56,7 @@ export default class Settings extends React.Component
                     <NavButton>
                         <MenuButton navigation={this.props.navigation} />
                     </NavButton>
-                    <Text style={Themes.navBarTitle}>
+                    <Text style={[Themes.navBarTitle, {marginRight: 40}]}>
                         Settings
                     </Text>
                 </NavGroup>
@@ -75,7 +75,7 @@ export default class Settings extends React.Component
                     <NavButton>
                         <MenuButton navigation={this.props.navigation} />
                     </NavButton>
-                    <Text style={Themes.navBarTitle}>
+                    <Text style={[Themes.navBarTitle, {marginRight: 40}]}>
                         Settings
                     </Text>
                 </NavGroup>

@@ -9,11 +9,11 @@ import {
     DeviceEventEmitter,
     ScrollView,
     SafeAreaView,
-    StatusBar
+    StatusBar,
+    Switch
 } from 'react-native';
 
 import { Actions } from 'react-native-router-flux';
-import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MenuButton from './components/MenuButton';
 import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -131,7 +131,7 @@ export default class statsDash extends React.Component {
     {
         
         this.obdLiveDataListener = DeviceEventEmitter.addListener('obd2LiveData', this.obdLiveData);
-        obd2.setMockUpMode(false);
+        obd2.setMockUpMode(true);
         obd2.startLiveData(this.state.btSelectedDeviceAddress);
         this.setState({isStartLiveData: true});
     }
@@ -221,10 +221,10 @@ export default class statsDash extends React.Component {
         let originData = this.state.obd2Data;
         let cmdKeys = Object.keys(this.state.obd2Data);
         let cmdData = cmdKeys.map(function(key) { return originData[key]; });
+        const toggleData = () => this.runMenu(this.state.isStartLiveData? 2 : 1);
         
         return(
-            <MenuProvider style={{flex: 1, backgroundColor: "#aaaaaa"}}  skipInstancesCheck>
-            <View style={{flex: 1}}>
+            <View style={{flex: 1, backgroundColor:"#aaaaaa"}}>
             <StatusBar backgroundColor={Themes.navBar.backgroundColor}/>
             <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
                 <NavGroup style={{marginLeft: 5, flex:1, alignItems:'center'}}>
@@ -235,21 +235,12 @@ export default class statsDash extends React.Component {
                         Dashboard
                     </Text>
                     <NavButton>
-                        <Menu onSelect={this.runMenu.bind(this)}>
-                            <MenuTrigger>
-                                <Text style={Themes.navBarRightButton}>
-                                    &#8942;
-                                </Text>
-                            </MenuTrigger>
-                            <MenuOptions>
-                                <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
-                                    <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
-                                </MenuOption>
-                                <MenuOption disabled={!this.state.isStartLiveData} value={2}>
-                                    <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
-                                </MenuOption>
-                            </MenuOptions>
-                        </Menu>
+                        <Switch
+                            trackColor={{ false: "#ff0000", true: "#00ff00" }}
+                            thumbColor={"#888888"}
+                            onValueChange={toggleData}
+                            value={this.state.isStartLiveData}
+                          />
                     </NavButton>
                 </NavGroup>
                 </SafeAreaView>
@@ -283,7 +274,6 @@ export default class statsDash extends React.Component {
                     </View>
                 </View>
             </View>
-            </MenuProvider>
         );
     }
 }

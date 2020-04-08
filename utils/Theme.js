@@ -11,9 +11,9 @@ const Themes = StyleSheet.create(
         {
             textAlign:'center',
             marginTop: 5,
-            marginRight: 30,
             fontSize: 20,
             flex: 1,
+            flexDirection: 'row',
             color:'#ffffff'
         },
         navBarRightButton:

@@ -10,13 +10,13 @@ import {
     DeviceEventEmitter,
     Dimensions,
     ScrollView,
-    StatusBar
+    StatusBar,
+    Switch
 } from 'react-native';
 
 import { Actions } from 'react-native-router-flux';
 import { Orientation } from 'react-native-orientation';
 import { Col, Row, Grid } from "react-native-easy-grid";
-import Menu, { MenuProvider, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import MenuButton from './components/MenuButton';
 import { NavButton, NavGroup, NavButtonText, NavTitle } from 'react-native-nav';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -346,6 +346,7 @@ export default class customDash extends React.Component {
     {
         let startLiveColor = this.state.isStartLiveData || this.state.btSelectedDeviceAddress == "" ? Color.DISABLED_COLOR : Color.BLACK;
         let stopLiveColor = this.state.isStartLiveData ? Color.BLACK : Color.DISABLED_COLOR;
+        const toggleData = () => this.runMenu(this.state.isStartLiveData? 2 : 1);
         
         return(
             <SafeAreaView style={Themes.navBar} forceInset={{top: 'always'}}>
@@ -354,32 +355,27 @@ export default class customDash extends React.Component {
                     <NavButton>
                         <MenuButton navigation={this.props.navigation} />
                     </NavButton>
-                    <Text style={Themes.navBarTitle}>
+                    <Text style={[Themes.navBarTitle, {marginLeft: 80}]}>
                         Dashboard
                     </Text>
                     <NavButton>
-                        <Menu onSelect={this.runMenu.bind(this)}>
-                            <MenuTrigger>
-                                <Text style={Themes.navBarRightButton}>
-                                    &#8942;
-                                </Text>
-                            </MenuTrigger>
-                            <MenuOptions>
-                                <MenuOption disabled={this.state.isStartLiveData || this.state.btSelectedDeviceAddress == ""} value={1}>
-                                    <Text style={[styles.menuOptionText, {color: startLiveColor}]} >Start Live Data</Text>
-                                </MenuOption>
-                                <MenuOption disabled={!this.state.isStartLiveData} value={2}>
-                                    <Text style={[styles.menuOptionText, {color: stopLiveColor}]}>Stop Live Data</Text>
-                                </MenuOption>
-                                <MenuOption value={3}>
-                                    <Text style={[styles.menuOptionText, {color: '#00ff00'}]}>Edit/Add Widgets</Text>
-                                </MenuOption>
-                                <MenuOption value={4}>
-                                    <Text style={[styles.menuOptionText]}>Refresh Screen Setup</Text>
-                                </MenuOption>
-                            </MenuOptions>
-                        </Menu>
+                          <Switch
+                            trackColor={{ false: "#ff0000", true: "#00ff00" }}
+                            thumbColor={"#888888"}
+                            onValueChange={toggleData}
+                            value={this.state.isStartLiveData}
+                          />
                     </NavButton>
+                    <Icon
+                        name="add"
+                        style={{ padding:10, fontSize: 24, color:'#aaaaaa'}}
+                        onPress={() => this.runMenu(3)}
+                     />
+                    <Icon
+                        name="refresh"
+                        style={{ padding:10, fontSize: 24, color:'#aaaaaa'}}
+                        onPress={() => this.runMenu(4)}
+                     />
                 </NavGroup>
             </SafeAreaView>
         );
@@ -389,15 +385,13 @@ export default class customDash extends React.Component {
     render()
     {
         return(
-            <MenuProvider skipInstancesCheck>
-                <View style={{flex: 1}}> 
-                    {this.header()}
+            <View style={{flex: 1}}> 
+                {this.header()}
 
-                    <View style={styles.bodyContainer}>
-                        {this.getWidgets()}
-                    </View>
+                <View style={styles.bodyContainer}>
+                    {this.getWidgets()}
                 </View>
-            </MenuProvider>
+            </View>
         );
     }
 }

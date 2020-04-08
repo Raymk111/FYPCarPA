@@ -33,7 +33,7 @@ export default class Dial extends React.Component
         return(
             <SafeAreaView>
             <Text style={styles.titleContainer}>{this.props.title}</Text>
-            <RNSpeedometer value={parseInt(this.props.value)} maxValue={this.props.maxValue} size={parseInt(150 * this.props.scale)} labels = {labels} innerCircleStyle={this.circleStyle}/>
+            <RNSpeedometer value={parseInt(this.props.value)} maxValue={this.props.maxValue} size={parseInt(130 * this.props.scale)} labels = {labels} innerCircleStyle={this.circleStyle}/>
             </SafeAreaView>
         )
     }
