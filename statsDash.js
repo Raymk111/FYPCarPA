@@ -131,7 +131,7 @@ export default class statsDash extends React.Component {
     {
         
         this.obdLiveDataListener = DeviceEventEmitter.addListener('obd2LiveData', this.obdLiveData);
-        obd2.setMockUpMode(true);
+        obd2.setMockUpMode(false);
         obd2.startLiveData(this.state.btSelectedDeviceAddress);
         this.setState({isStartLiveData: true});
     }

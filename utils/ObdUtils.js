@@ -7,7 +7,9 @@ module.exports = {
         "rpm" : "dddd",
         "kmh" : "ddd",
         "mph" : "ddd",
-        "aat" : "dd"
+        "aat" : "dd",
+        "fuelCons" : "ddd",
+        "maf" : "dddd",
     },
     
     maxValues :
@@ -16,7 +18,9 @@ module.exports = {
         "rpm" : 6000,
         "kmh" : 240,
         "mph" : 140,
-        "aat" : 100
+        "aat" : 100,
+        "fuelCons" : 200,
+        "maf" : "200"
     },
     
     analogInputs :
@@ -34,22 +38,36 @@ module.exports = {
     digitalInputs :
     [
         {
-          name: "Speed",
-          address: "speed"
+            name: "Speed",
+            address: "speed"
         },
         {
-          name: "RPM",
-          address: "rpm"
+            name: "RPM",
+            address: "rpm"
         },
         {
-          name: "Ambient Air Temperature",
-          address: "aat"
+            name: "Ambient Air Temperature",
+            address: "aat"
         },
         {
-          name: "Air Intake Temperature",
-          address: "ait"
+            name: "Air Intake Temperature",
+            address: "ait"
         },
+        {
+            name: "Fuel Economy",
+            address: "fuelCons"
+        },
+        {
+            name: "Mass Air Flow",
+            address: "maf"
+        }
     ],
+    
+    mpgRatio :
+    {
+        diesel : 244.724,
+        petrol : 217.572
+    },
     
     units :
     {
@@ -57,11 +75,15 @@ module.exports = {
         rpm: "RPM",
         aat: "°C",
         ait: "°C",
+        maf: "g/s",
+        fuelCons: "mpg"
     },
     
     cmdIDMap :
     {
         speed: "SPEED",
+        maf: "MAF",
+        fuelCons: "FUEL_CONSUMPTION_RATE",
         rpm: "ENGINE_RPM",
         aat: "AMBIENT_AIR_TEMP",
         ait: "AIR_INTAKE_TEMP",

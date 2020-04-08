@@ -53,6 +53,8 @@ export default class customDash extends React.Component {
         };
         
         this.dataSubList = [];
+        this.speed = 0;
+        this.fuelCons = 0;
         this.btStatus = this.btStatus.bind(this);
         this.obdStatus = this.obdStatus.bind(this);
         this.obdLiveData = this.obdLiveData.bind(this);
@@ -137,12 +139,33 @@ export default class customDash extends React.Component {
     {
         var stateUpdateObj = {};
         var haveData = false;
+        
+//        data.cmdResult = parseInt(100*Math.random());
+        
+        //always need speed and MAF
+        if(data.cmdID === ObdUtils.cmdIDMap.speed && this.speed != parseInt(data.cmdResult))
+        {
+            this.speed = parseInt(data.cmdResult);
+        }
+        
+        if(this.speed > 0 &&
+           this.speed < 400 &&
+           data.cmdID === ObdUtils.cmdIDMap.maf &&
+           parseInt(data.cmdResult) > 0)
+        {
+            this.fuelCons = (ObdUtils.mpgRatio.diesel * parseInt(this.speed))/parseInt(data.cmdResult);
+        }
+        
         for(var i = 0; i < this.dataSubList.length; i++)
         {
-            if(data.cmdResult != null && data.cmdID == this.dataSubList[i].cmdID)
+            if(this.dataSubList[i].cmdID == ObdUtils.cmdIDMap.fuelCons && this.fuelCons != 0)
+            {
+                stateUpdateObj[this.dataSubList[i].data] = parseInt(this.fuelCons);
+                haveData = true;
+            }
+            else if(data.cmdResult != null && data.cmdID == this.dataSubList[i].cmdID && data.cmdID != ObdUtils.cmdIDMap.fuelCons)
             {
                 console.log(data);
-//                stateUpdateObj[this.dataSubList[i].data] = parseInt(1000*Math.random())+"rpm";
                 stateUpdateObj[this.dataSubList[i].data] = data.cmdResult;
                 haveData = true;
             }
@@ -234,7 +257,7 @@ export default class customDash extends React.Component {
             {
                 case "digital":
                     return(
-                        <DigitalInp key={this.state[widgetConfig.data]} title={ObdUtils.units[widgetConfig.data]} value={this.state[widgetConfig.data]} format={ObdUtils.dataFormats[widgetConfig.data]} digitStyles={{lineStyle : widgetConfig.ec, fillStyle : widgetConfig.mc}} scale={scale} />
+                        <DigitalInp title={ObdUtils.units[widgetConfig.data]} value={this.state[widgetConfig.data]} format={ObdUtils.dataFormats[widgetConfig.data]} digitStyles={{lineStyle : widgetConfig.ec, fillStyle : widgetConfig.mc}} scale={scale} />
                     );
 
                 case "analog":
